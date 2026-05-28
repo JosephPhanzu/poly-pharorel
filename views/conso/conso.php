@@ -31,18 +31,18 @@ ob_start();
         </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm overflow-x-auto p-2">
+    <div class="bg-white rounded-2xl">
     <table class="w-full text-sm">
-        <thead class="bg-gray-50">
+        <thead class="bg-gray-100 m-0">
             <tr>
-                <th>Abonné</th>
-                <th>Ancien index</th>
-                <th>Nouvel index</th>
-                <th>kWh</th>
-                <th>Mois & Année</th>
+                <th class="py-2 px-2">Abonné</th>
+                <th class="py-2 px-2">Ancien index</th>
+                <th class="py-2 px-2">Nouvel index</th>
+                <th class="py-2 px-2">kWh</th>
+                <th class="py-2 px-2">Mois & Année</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody class="bg-white rounded-2xl shadow-sm overflow-x-auto p-2">
         <template x-for="c in paginatedConsommations()" :key="c.id">
             <tr class="border-t">
                 <td class="py-2 px-2" x-text="c.nom"></td>

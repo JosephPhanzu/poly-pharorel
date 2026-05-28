@@ -34,12 +34,12 @@ ob_start();
 
     <div class="bg-white rounded-2xl shadow-sm overflow-x-auto">
         <table class="w-full text-sm">
-            <thead class="bg-gray-50">
+            <thead class="bg-gray-100">
                 <tr>
-                    <th>Abonné</th>
-                    <th>Montant</th>
-                    <th>Mois</th>
-                    <th>Statut</th>
+                    <th class="py-2 px-2">Abonné</th>
+                    <th class="py-2 px-2">Montant</th>
+                    <th class="py-2 px-2">Mois</th>
+                    <th class="py-2 px-2">Statut</th>
                 </tr>
             </thead>
             <tbody>
