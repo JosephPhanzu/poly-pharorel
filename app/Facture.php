@@ -4,17 +4,19 @@
 
     class Facture extends Database{
 
-        protected $table = "factures";
-        private $num_client, $total, $code_user, $code_pharma;
+        protected $table = "facture";
+
+        			
+        private $code_conso, $montant, $statut, $date_facture;
 
         private static $config;
 
-        public function __construct($num_client = null, $total = null, $code_user = null, $code_pharma = null) {
+        public function __construct($code_conso = null, $montant = null, $statut = null, $date_facture = null) {
 
-            $this->num_client = $num_client;
-            $this->total = $total;
-            $this->code_user = $code_user;
-            $this->code_pharma = $code_pharma;
+            $this->code_conso = $code_conso;
+            $this->montant = $montant;
+            $this->statut = $statut;
+            $this->date_facture = $date_facture;
 
             self::$config = (ConfigDB::getInstance())->getConfig();
             parent::__construct(self::$config);
@@ -49,12 +51,11 @@
             try {
 
                 self::insert($this->table, [
-                    'num_client' => $this->num_client,
-                    'total' => $this->total,
-                    'code_utilisateur' => $this->code_user,
-                    'code_pharmacie'=> $this->code_pharma,
+                    'code_conso' => $this->code_conso,
+                    'montant' => $this->montant,
+                    'statut' => $this->statut,
+                    'date_facture'=> $this->date_facture,
                     'code' => bin2hex(random_bytes(16)),
-                    'temps' => time()
                 ]);
         
                 $id = self::$db->lastInsertId();
@@ -65,24 +66,24 @@
             }
         }
 
-        public function getByCode($code_pharmacie) {
-            return self::findAllByParams($this->table, 'code_pharmacie = :code', ['code' => $code_pharmacie]);
+        public function getByCode($date_facturecie) {
+            return self::findAllByParams($this->table, 'date_facturecie = :code', ['code' => $date_facturecie]);
         }
         
         // Single facture for employé
-        public function getFactureByPharmaUser($code_pharmacie, $code_user, $code_facture): array{
+        public function getFactureByPharmaUser($date_facturecie, $statut, $code_facture): array{
             try {
 
                 $stmt = self::$db->prepare("
-                    SELECT DISTINCT f.id, f.code AS code_facture, c.nom_client, f.total, f.temps, e.nom AS nom_vendeur, fp.nom_produit, fp.quantite, fp.prix
+                    SELECT DISTINCT f.id, f.code AS code_facture, c.nom_client, f.montant, f.temps, e.nom AS nom_vendeur, fp.nom_produit, fp.quantite, fp.prix
                     FROM $this->table f
                     INNER JOIN client c ON f.code_membre = c.contact_client
                     INNER JOIN facture_produit fp ON f.code = fp.code_facture
                     INNER JOIN employe e ON f.code_utilisateur = e.code
-                    WHERE f.code_pharmacie = :code_pharmacie AND f.code_utilisateur = :code_user AND f.code = :code_facture
+                    WHERE f.date_facturecie = :date_facturecie AND f.code_utilisateur = :statut AND f.code = :code_facture
                 ");
-                $stmt->bindValue("code_pharmacie", $code_pharmacie, \PDO::PARAM_STR);
-                $stmt->bindValue("code_user", $code_user, \PDO::PARAM_STR);
+                $stmt->bindValue("date_facturecie", $date_facturecie, \PDO::PARAM_STR);
+                $stmt->bindValue("statut", $statut, \PDO::PARAM_STR);
                 $stmt->bindValue("code_facture", $code_facture, \PDO::PARAM_STR);
                 $stmt->execute();
 
@@ -94,12 +95,12 @@
         }
 
         // Single facture for proprio
-        public function getArticleFactureByPharma($code_pharmacie, $code_facture): array {
+        public function getArticleFactureByPharma($date_facturecie, $code_facture): array {
             try {
                 // 2️⃣ Articles de la facture
                 $produitsStmt = self::$db->prepare("
                     SELECT 
-                        nom_produit, quantite, prix, (quantite * prix) AS sous_total
+                        nom_produit, quantite, prix, (quantite * prix) AS sous_montant
                     FROM facture_produit
                     WHERE code_facture = :code_facture
                 ");
@@ -112,7 +113,7 @@
         }
 
 
-        public function getFactureByPharma($code_pharmacie, $code_facture): array{
+        public function getFactureByPharma($date_facturecie, $code_facture): array{
             try {
 
                 $stmt = self::$db->prepare("
@@ -120,23 +121,23 @@
                         f.id, 
                         f.code AS code_facture, 
                         c.nom_client, 
-                        f.total, 
+                        f.montant, 
                         f.temps, 
                         e.nom AS nom_vendeur,
                         fp.nom_produit, 
                         fp.quantite, 
                         fp.prix,
-                        (fp.quantite * fp.prix) AS sous_total
+                        (fp.quantite * fp.prix) AS sous_montant
                     FROM $this->table f
-                    INNER JOIN client c ON f.num_client = c.contact_client
+                    INNER JOIN client c ON f.code_conso = c.contact_client
                     INNER JOIN facture_produit fp ON f.code = fp.code_facture
                     INNER JOIN employe e ON f.code_utilisateur = e.code
-                    WHERE f.code_pharmacie = :code_pharmacie 
+                    WHERE f.date_facturecie = :date_facturecie 
                     AND f.code = :code_facture;
 
 
                 ");
-                $stmt->bindValue("code_pharmacie", $code_pharmacie, \PDO::PARAM_STR);
+                $stmt->bindValue("date_facturecie", $date_facturecie, \PDO::PARAM_STR);
                 $stmt->bindValue("code_facture", $code_facture, \PDO::PARAM_STR);
                 $stmt->execute();
 
@@ -148,21 +149,21 @@
         }
 
         // All sales for employé
-        public function getAllFacturesDetailsByPharmaUser($code_pharmacie, $code_user, $debutJour, $finJour, $limit, $offset): array{
+        public function getAllFacturesDetailsByPharmaUser($date_facturecie, $statut, $debutJour, $finJour, $limit, $offset): array{
             try {
 
                 $stmt = self::$db->prepare("
-                    SELECT DISTINCT f.id, f.code AS code_facture, c.code_pharmacie, c.nom_client, f.total, f.temps, e.nom AS nom_vendeur
+                    SELECT DISTINCT f.id, f.code AS code_facture, c.date_facturecie, c.nom_client, f.montant, f.temps, e.nom AS nom_vendeur
                     FROM $this->table f
-                    INNER JOIN client c ON f.num_client = c.contact_client
+                    INNER JOIN client c ON f.code_conso = c.contact_client
                     INNER JOIN employe e ON f.code_utilisateur = e.code
-                    WHERE f.code_pharmacie = :code_pharmacie AND f.code_utilisateur = :code_user AND c.code_pharmacie = :pharma_client AND f.temps BETWEEN :debutJour AND :finJour
+                    WHERE f.date_facturecie = :date_facturecie AND f.code_utilisateur = :statut AND c.date_facturecie = :pharma_client AND f.temps BETWEEN :debutJour AND :finJour
                     ORDER BY f.id DESC 
                     LIMIT :limit OFFSET :offset
                 ");
-                $stmt->bindValue("code_pharmacie", $code_pharmacie, \PDO::PARAM_STR);
-                $stmt->bindValue("code_user", $code_user, \PDO::PARAM_STR);
-                $stmt->bindValue("pharma_client", $code_pharmacie, \PDO::PARAM_STR);
+                $stmt->bindValue("date_facturecie", $date_facturecie, \PDO::PARAM_STR);
+                $stmt->bindValue("statut", $statut, \PDO::PARAM_STR);
+                $stmt->bindValue("pharma_client", $date_facturecie, \PDO::PARAM_STR);
                 $stmt->bindValue("debutJour", $debutJour, \PDO::PARAM_STR);
                 $stmt->bindValue("finJour", $finJour, \PDO::PARAM_STR);
                 $stmt->bindValue('limit', (int)$limit, \PDO::PARAM_INT);
@@ -177,20 +178,20 @@
         }
 
         // All sales for proprio
-        public function getAllFacturesDetailsByPharma($code_pharmacie, $debutJour, $finJour, $limit, $offset): array{
+        public function getAllFacturesDetailsByPharma($date_facturecie, $debutJour, $finJour, $limit, $offset): array{
             try {
 
                 $stmt = self::$db->prepare(query: "
-                    SELECT DISTINCT f.id, f.code AS code_facture, f.code_pharmacie, c.nom_client, f.total, f.temps, e.nom AS nom_vendeur
+                    SELECT DISTINCT f.id, f.code AS code_facture, f.date_facturecie, c.nom_client, f.montant, f.temps, e.nom AS nom_vendeur
                     FROM $this->table f
-                    INNER JOIN client c ON f.num_client = c.contact_client
+                    INNER JOIN client c ON f.code_conso = c.contact_client
                     INNER JOIN employe e ON f.code_utilisateur = e.code
-                    WHERE f.code_pharmacie = :code_pharmacie AND c.code_pharmacie = :pharma_client AND f.temps BETWEEN :debutJour AND :finJour
+                    WHERE f.date_facturecie = :date_facturecie AND c.date_facturecie = :pharma_client AND f.temps BETWEEN :debutJour AND :finJour
                     ORDER BY f.id DESC 
                     LIMIT :limit OFFSET :offset
                 ");
-                $stmt->bindValue("code_pharmacie", $code_pharmacie, \PDO::PARAM_STR);
-                $stmt->bindValue("pharma_client", $code_pharmacie, \PDO::PARAM_STR);
+                $stmt->bindValue("date_facturecie", $date_facturecie, \PDO::PARAM_STR);
+                $stmt->bindValue("pharma_client", $date_facturecie, \PDO::PARAM_STR);
                 $stmt->bindValue("debutJour", $debutJour, \PDO::PARAM_STR);
                 $stmt->bindValue("finJour", $finJour, \PDO::PARAM_STR);
                 $stmt->bindValue('limit', (int)$limit, \PDO::PARAM_INT);
@@ -205,19 +206,19 @@
         }
 
 
-        public function getAllFacturesByPharmaUser($code_pharmacie, $code_user, $debutJour, $finJour): array{
+        public function getAllFacturesByPharmaUser($date_facturecie, $statut, $debutJour, $finJour): array{
             try {
 
                 $stmt = self::$db->prepare("
-                    SELECT DISTINCT f.id, f.code AS code_facture, f.code_pharmacie, c.nom_client, f.total, f.temps, e.nom AS nom_vendeur
+                    SELECT DISTINCT f.id, f.code AS code_facture, f.date_facturecie, c.nom_client, f.montant, f.temps, e.nom AS nom_vendeur
                     FROM $this->table f
-                    INNER JOIN client c ON f.num_client = c.contact_client
+                    INNER JOIN client c ON f.code_conso = c.contact_client
                     INNER JOIN employe e ON f.code_utilisateur = e.code
-                    WHERE f.code_pharmacie = :code_pharmacie AND f.code_utilisateur = :code_user AND c.code_pharmacie = :pharma_client AND f.temps BETWEEN :debutJour AND :finJour
+                    WHERE f.date_facturecie = :date_facturecie AND f.code_utilisateur = :statut AND c.date_facturecie = :pharma_client AND f.temps BETWEEN :debutJour AND :finJour
                 ");
-                $stmt->bindValue("code_pharmacie", $code_pharmacie, \PDO::PARAM_STR);
-                $stmt->bindValue("code_user", $code_user, \PDO::PARAM_STR);
-                $stmt->bindValue("pharma_client", $code_pharmacie, \PDO::PARAM_STR);
+                $stmt->bindValue("date_facturecie", $date_facturecie, \PDO::PARAM_STR);
+                $stmt->bindValue("statut", $statut, \PDO::PARAM_STR);
+                $stmt->bindValue("pharma_client", $date_facturecie, \PDO::PARAM_STR);
                 $stmt->bindValue("debutJour", $debutJour, \PDO::PARAM_STR);
                 $stmt->bindValue("finJour", $finJour, \PDO::PARAM_STR);
                 $stmt->execute();
@@ -230,18 +231,18 @@
         }
 
         // All sales for proprio
-        public function getAllFacturesByPharma($code_pharmacie, $debutJour, $finJour): array{
+        public function getAllFacturesByPharma($date_facturecie, $debutJour, $finJour): array{
             try {
 
                 $stmt = self::$db->prepare(query: "
-                    SELECT DISTINCT f.id, f.code AS code_facture, f.code_pharmacie, c.nom_client, f.total, f.temps, e.nom AS nom_vendeur
+                    SELECT DISTINCT f.id, f.code AS code_facture, f.date_facturecie, c.nom_client, f.montant, f.temps, e.nom AS nom_vendeur
                     FROM $this->table f
-                    INNER JOIN client c ON f.num_client = c.contact_client
+                    INNER JOIN client c ON f.code_conso = c.contact_client
                     INNER JOIN employe e ON f.code_utilisateur = e.code
-                    WHERE f.code_pharmacie = :code_pharmacie AND c.code_pharmacie = :pharma_client AND f.temps BETWEEN :debutJour AND :finJour
+                    WHERE f.date_facturecie = :date_facturecie AND c.date_facturecie = :pharma_client AND f.temps BETWEEN :debutJour AND :finJour
                 ");
-                $stmt->bindValue("code_pharmacie", $code_pharmacie, \PDO::PARAM_STR);
-                $stmt->bindValue("pharma_client", $code_pharmacie, \PDO::PARAM_STR);
+                $stmt->bindValue("date_facturecie", $date_facturecie, \PDO::PARAM_STR);
+                $stmt->bindValue("pharma_client", $date_facturecie, \PDO::PARAM_STR);
                 $stmt->bindValue("debutJour", $debutJour, \PDO::PARAM_STR);
                 $stmt->bindValue("finJour", $finJour, \PDO::PARAM_STR);
                 $stmt->execute();
@@ -254,18 +255,18 @@
         }
 
 
-        public function getProduitPlusVenduByPharma($code_pharmacie, $debutJour, $finJour): array{
+        public function getProduitPlusVenduByPharma($date_facturecie, $debutJour, $finJour): array{
             try {
 
                 $stmt = self::$db->prepare("
-                    SELECT DISTINCT c.nom_client, f.total, f.temps, e.nom AS nom_vendeur, fp.nom_produit, fp.quantite, fp.prix
+                    SELECT DISTINCT c.nom_client, f.montant, f.temps, e.nom AS nom_vendeur, fp.nom_produit, fp.quantite, fp.prix
                     FROM $this->table f
-                    INNER JOIN client c ON f.num_client = c.contact_client
+                    INNER JOIN client c ON f.code_conso = c.contact_client
                     INNER JOIN facture_produit fp ON f.code = fp.code_facture
                     INNER JOIN employe e ON f.code_utilisateur = e.code
-                    WHERE f.code_pharmacie = :code_pharmacie AND f.temps BETWEEN :debutJour AND :finJour
+                    WHERE f.date_facturecie = :date_facturecie AND f.temps BETWEEN :debutJour AND :finJour
                 ");
-                $stmt->bindValue("code_pharmacie", $code_pharmacie, \PDO::PARAM_STR);
+                $stmt->bindValue("date_facturecie", $date_facturecie, \PDO::PARAM_STR);
                 $stmt->bindValue("debutJour", $debutJour, \PDO::PARAM_STR);
                 $stmt->bindValue("finJour", $finJour, \PDO::PARAM_STR);
                 $stmt->execute();
@@ -278,7 +279,7 @@
         }
 
         // Rapport de ventes journalier
-        public function getDailyReport($date = null, $code_pharmacie = null): array {
+        public function getDailyReport($date = null, $date_facturecie = null): array {
             try {
                 if (empty($date)) {
                     $debutJour = strtotime('today');
@@ -293,15 +294,15 @@
                 ];
 
                 $pharmaFilter = '';
-                if (!empty($code_pharmacie)) {
-                    $pharmaFilter = ' AND f.code_pharmacie = :code_pharmacie';
-                    $params['code_pharmacie'] = $code_pharmacie;
+                if (!empty($date_facturecie)) {
+                    $pharmaFilter = ' AND f.date_facturecie = :date_facturecie';
+                    $params['date_facturecie'] = $date_facturecie;
                 }
 
-                // Total ventes et nombre de factures
-                $stmt = self::$db->prepare("SELECT COUNT(DISTINCT f.id) AS invoices_count, COALESCE(SUM(fp.quantite * fp.prix),0) AS total_sales FROM $this->table f JOIN facture_produit fp ON f.code = fp.code_facture WHERE f.temps BETWEEN :debut AND :fin" . $pharmaFilter);
+                // montant ventes et nombre de factures
+                $stmt = self::$db->prepare("SELECT COUNT(DISTINCT f.id) AS invoices_count, COALESCE(SUM(fp.quantite * fp.prix),0) AS montant_sales FROM $this->table f JOIN facture_produit fp ON f.code = fp.code_facture WHERE f.temps BETWEEN :debut AND :fin" . $pharmaFilter);
                 $stmt->execute($params);
-                $summary = $stmt->fetch(\PDO::FETCH_ASSOC) ?: ['invoices_count' => 0, 'total_sales' => 0];
+                $summary = $stmt->fetch(\PDO::FETCH_ASSOC) ?: ['invoices_count' => 0, 'montant_sales' => 0];
 
                 // Top produits
                 $queryTop = "SELECT fp.nom_produit AS name, SUM(fp.quantite) AS qty, COALESCE(SUM(fp.quantite * fp.prix),0) AS sales FROM facture_produit fp JOIN $this->table f ON f.code = fp.code_facture WHERE f.temps BETWEEN :debut AND :fin" . $pharmaFilter . " GROUP BY fp.nom_produit ORDER BY qty DESC LIMIT 10";
@@ -311,7 +312,7 @@
 
                 return [
                     'date' => date('Y-m-d', $debutJour),
-                    'total_sales' => (float)$summary['total_sales'],
+                    'montant_sales' => (float)$summary['montant_sales'],
                     'invoices_count' => (int)$summary['invoices_count'],
                     'top_products' => $topProducts
                 ];

@@ -1,0 +1,476 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>MediFlow - Connexion | Espace hospitalier sécurisé</title>
+    <!-- Tailwind CSS CDN + Font Awesome + Google Fonts Inter -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        /* transition douce entre formulaires */
+        .auth-card {
+            transition: all 0.3s ease;
+        }
+        .fade-transition {
+            transition: opacity 0.2s ease-in-out;
+        }
+        input:focus {
+            outline: none;
+            ring: 2px solid #1E3A8A;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E3A8A',
+                        secondary: '#F97316',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-primary/90 via-primary/70 to-secondary/80 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Conteneur principal - carte centrée avec effet glassmorphisme -->
+    <div class="w-full max-w-5xl">
+        <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+            
+            <!-- PARTIE GAUCHE - Branding & Illustration (cachée sur mobile, visible sur tablette/desktop) -->
+            <div class="hidden md:flex md:w-2/5 bg-gradient-to-br from-primary to-primary/80 p-8 flex-col justify-between relative">
+                <div class="absolute top-0 right-0 w-40 h-40 bg-secondary/20 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-12">
+                        <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shadow-lg">
+                            <i class="fas fa-hospital-user text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-white text-2xl font-bold">MediFlow</h1>
+                            <p class="text-white/70 text-xs">Centre Hospitalier Universitaire</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-6 mt-8">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-secondary/30 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-shield-alt text-secondary text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold">Sécurité médicale</h3>
+                                <p class="text-white/70 text-xs">Données patients protégées & conformité RGPD</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-secondary/30 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-clock text-secondary text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold">Accès 24/7</h3>
+                                <p class="text-white/70 text-xs">Consultation des dossiers en temps réel</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-secondary/30 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-stethoscope text-secondary text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold">Équipe dédiée</h3>
+                                <p class="text-white/70 text-xs">Support médical et technique 5j/7</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative z-10 mt-8">
+                    <div class="flex items-center gap-2 text-white/60 text-xs">
+                        <i class="fas fa-lock"></i>
+                        <span>Connexion sécurisée TLS 1.3</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PARTIE DROITE - Formulaire dynamique (Login / Register / Forgot) -->
+            <div class="w-full md:w-3/5 p-6 sm:p-8 lg:p-10 bg-white">
+                <!-- Logo visible uniquement sur mobile -->
+                <div class="flex justify-center mb-6 md:hidden">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md">
+                        <i class="fas fa-hospital-user text-white text-2xl"></i>
+                    </div>
+                </div>
+                <div class="text-center md:text-left md:hidden mb-4">
+                    <h2 class="text-2xl font-bold text-primary">MediFlow</h2>
+                    <p class="text-gray-500 text-xs">Portail professionnel de santé</p>
+                </div>
+                
+                <!-- ======================== FORMULAIRE LOGIN ======================== -->
+                <div id="loginFormContainer" class="fade-transition">
+                    <div class="text-center md:text-left mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Connexion</h2>
+                        <p class="text-gray-500 text-sm mt-1">Accédez à votre tableau de bord médical</p>
+                    </div>
+                    
+                    <form id="form-login" class="space-y-5">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-1">Email professionnel <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i class="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                                <input type="email" name="email" id="loginEmail" required class="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition" placeholder="medecin@hopital.fr">
+                            </div>
+                            <p id="loginEmailError" class="text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-1">Mot de passe <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                                <input type="password" name="password" id="loginPassword" required class="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition" placeholder="••••••••">
+                                <button type="button" class="togglePassword absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition">
+                                    <i class="far fa-eye-slash"></i>
+                                </button>
+                            </div>
+                            <p id="loginPasswordError" class="text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+                        
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="rememberMe" id="rememberMe" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30">
+                                <span class="text-sm text-gray-600">Se souvenir de moi</span>
+                            </label>
+                            <button type="button" id="forgotBtnFromLogin" class="text-sm text-secondary hover:text-secondary/80 font-medium transition">Mot de passe oublié ?</button>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-xl shadow-md transition transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                            <i class="fas fa-arrow-right-to-bracket"></i> Se connecter
+                        </button>
+                    </form>
+                    
+                    <!-- <div class="mt-6 text-center">
+                        <p class="text-gray-500 text-sm">Pas encore de compte ? 
+                            <button type="button" id="showRegisterFromLogin" class="text-secondary font-semibold hover:underline">Créer un compte</button>
+                        </p>
+                    </div> -->
+                    
+                    <!-- Démo credentials -->
+                    <!-- <div class="mt-6 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                        <p class="text-xs text-gray-600"><i class="fas fa-info-circle text-primary mr-1"></i> <strong>Compte de démonstration :</strong></p>
+                        <p class="text-xs text-gray-500 mt-1">📧 <span class="font-mono">medecin@hopital.fr</span> | 🔑 <span class="font-mono">password123</span></p>
+                    </div> -->
+                </div>
+                
+                <!-- ======================== FORMULAIRE FORGOT PASSWORD ======================== -->
+                <div id="forgotFormContainer" class="fade-transition hidden">
+                    <div class="text-center md:text-left mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Mot de passe oublié</h2>
+                        <p class="text-gray-500 text-sm mt-1">Nous vous enverrons un lien de réinitialisation</p>
+                    </div>
+                    
+                    <form id="forgotForm" class="space-y-5">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-1">Votre email professionnel</label>
+                            <div class="relative">
+                                <i class="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <input type="email" id="forgotEmail" required class="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:border-primary/50" placeholder="medecin@hopital.fr">
+                            </div>
+                            <p id="forgotEmailError" class="text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-secondary hover:bg-secondary/90 text-white font-semibold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                            <i class="fas fa-paper-plane"></i> Envoyer le lien
+                        </button>
+                    </form>
+                    
+                    <div class="mt-6 text-center">
+                        <button type="button" id="backToLoginFromForgot" class="text-primary hover:text-primary/80 text-sm font-medium transition">
+                            <i class="fas fa-arrow-left mr-1"></i> Retour à la connexion
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer simple -->
+        <p class="text-center text-white/70 text-xs mt-6">© 2025 PolyPharborel - Plateforme de gestion hospitalière sécurisée</p>
+    </div>
+
+
+    <!-- Axios CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.9.0/dist/axios.min.js"></script>
+
+    <script>
+        lucide.createIcons();
+
+        $(document).ready(function(){
+            
+            $(document).on('submit', '#form-login', async function(e) {
+                e.preventDefault();
+                formData = new FormData(this);
+
+                const res = await axios.post('/login', formData);
+                // const [status, message] = res.data;
+                console.log(res.data.message);
+                $('#info').removeClass('d-none success error');
+                if (res.data.status === 'success') {
+                    $('#info').addClass('success').hide().fadeIn("slow");
+                    window.location.replace(res.data.route);
+                } else {
+                    $('#info').addClass('error').hide().fadeIn("slow");
+                }
+                $('#info').html(res.data.message);
+            })
+
+        })
+    </script>
+
+
+    <script>
+        // Gestion d'état des formulaires avec vanilla JS
+        const loginContainer = document.getElementById('loginFormContainer');
+        const registerContainer = document.getElementById('registerFormContainer');
+        const forgotContainer = document.getElementById('forgotFormContainer');
+        
+        // Fonctions de basculement UI
+        function showLogin() {
+            loginContainer.classList.remove('hidden');
+            registerContainer.classList.add('hidden');
+            forgotContainer.classList.add('hidden');
+            // Reset des formulaires cachés et erreurs
+            resetFormErrors();
+        }
+        
+        function showRegister() {
+            loginContainer.classList.add('hidden');
+            registerContainer.classList.remove('hidden');
+            forgotContainer.classList.add('hidden');
+            resetFormErrors();
+        }
+        
+        function showForgot() {
+            loginContainer.classList.add('hidden');
+            registerContainer.classList.add('hidden');
+            forgotContainer.classList.remove('hidden');
+            resetFormErrors();
+        }
+        
+        function resetFormErrors() {
+            document.querySelectorAll('.text-red-500.text-xs').forEach(el => el.classList.add('hidden'));
+        }
+        
+        // Event listeners pour basculer
+        document.getElementById('showRegisterFromLogin').addEventListener('click', showRegister);
+        document.getElementById('showLoginFromRegister').addEventListener('click', showLogin);
+        document.getElementById('forgotBtnFromLogin').addEventListener('click', showForgot);
+        document.getElementById('backToLoginFromForgot').addEventListener('click', showLogin);
+        
+        // Toggle password visibility pour login
+        const toggleButtons = document.querySelectorAll('.togglePassword');
+        toggleButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const passwordInput = this.closest('.relative').querySelector('input');
+                const icon = this.querySelector('i');
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            });
+        });
+        
+        // Toggle pour register password
+        const toggleRegBtn = document.querySelector('.toggleRegisterPassword');
+        if(toggleRegBtn) {
+            toggleRegBtn.addEventListener('click', function() {
+                const passInput = document.getElementById('registerPassword');
+                const icon = this.querySelector('i');
+                if (passInput.type === 'password') {
+                    passInput.type = 'text';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    passInput.type = 'password';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            });
+        }
+        
+        // ---------- VALIDATIONS & SIMULATION API ----------
+        
+        // LOGIN simulation avec stockage sécurisé (aucun stockage en clair)
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            let isValid = true;
+            
+            // validation email
+            const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+            if (!email) {
+                showFieldError('loginEmailError', 'L\'email est requis');
+                isValid = false;
+            } else if (!emailRegex.test(email)) {
+                showFieldError('loginEmailError', 'Format email invalide (ex: nom@hopital.fr)');
+                isValid = false;
+            } else {
+                hideFieldError('loginEmailError');
+            }
+            
+            if (!password) {
+                showFieldError('loginPasswordError', 'Le mot de passe est requis');
+                isValid = false;
+            } else if (password.length < 4) {
+                showFieldError('loginPasswordError', 'Mot de passe trop court');
+                isValid = false;
+            } else {
+                hideFieldError('loginPasswordError');
+            }
+            
+            if (!isValid) return;
+            
+            // Simulation d'appel API (hachage non stocké)
+            // Simuler vérification credentials (pour démo email: medecin@hopital.fr / password123)
+            if (email === 'medecin@hopital.fr' && password === 'password123') {
+                // Simuler stockage token dans localStorage pour "Se souvenir de moi"
+                const remember = document.getElementById('rememberMe').checked;
+                if (remember) {
+                    localStorage.setItem('mediflow_remember', 'true');
+                    localStorage.setItem('mediflow_user', btoa(email)); // base64 simple mais pas du mot de passe
+                } else {
+                    localStorage.removeItem('mediflow_remember');
+                    localStorage.removeItem('mediflow_user');
+                }
+                // animation succès
+                const btn = e.submitter;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion...';
+                setTimeout(() => {
+                    alert('✅ Connexion réussie ! Redirection vers le tableau de bord...\n(SIMULATION - Dashboard non implémenté dans cette page d\'auth)');
+                    btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Se connecter';
+                    // Optionnel : redirection vers dashboard (mais ici contexte uniquement auth)
+                    // window.location.href = "/dashboard"; 
+                }, 800);
+            } else {
+                showFieldError('loginPasswordError', 'Email ou mot de passe incorrect (démo: medecin@hopital.fr / password123)');
+            }
+        });
+        
+        // REGISTER simulation
+        document.getElementById('registerForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            let valid = true;
+            const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+            
+            if (!fullName) { showFieldError('fullNameError', 'Nom complet requis'); valid = false; } else { hideFieldError('fullNameError'); }
+            
+            if (!email) { showFieldError('registerEmailError', 'Email requis'); valid = false; } 
+            else if (!emailRegex.test(email)) { showFieldError('registerEmailError', 'Email invalide'); valid = false; } 
+            else { hideFieldError('registerEmailError'); }
+            
+            if (!password) { showFieldError('registerPasswordError', 'Mot de passe requis'); valid = false; }
+            else if (password.length < 6) { showFieldError('registerPasswordError', 'Minimum 6 caractères'); valid = false; }
+            else { hideFieldError('registerPasswordError'); }
+            
+            if (!confirm) { showFieldError('confirmError', 'Confirmation requise'); valid = false; }
+            else if (password !== confirm) { showFieldError('confirmError', 'Les mots de passe ne correspondent pas'); valid = false; }
+            else { hideFieldError('confirmError'); }
+            
+            if (!valid) return;
+            
+            // Simuler envoi inscription (hash du mot de passe simulé)
+            const simulatedHash = btoa(password + 'salt_fake');
+            console.log('🔐 Simulation inscription', { fullName, email, passwordHash: simulatedHash });
+            alert(`✅ Inscription réussie ! Bienvenue ${fullName}. Vous pouvez maintenant vous connecter.`);
+            // Réinitialiser formulaire après inscription et basculer connexion
+            document.getElementById('registerForm').reset();
+            showLogin();
+        });
+        
+        // FORGOT PASSWORD simulation
+        document.getElementById('forgotForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value.trim();
+            const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+            if (!email) {
+                showFieldError('forgotEmailError', 'Veuillez entrer votre email');
+                return;
+            }
+            if (!emailRegex.test(email)) {
+                showFieldError('forgotEmailError', 'Format email invalide');
+                return;
+            }
+            hideFieldError('forgotEmailError');
+            // Simulation envoi lien (ne stocke rien)
+            alert(`📧 Un lien de réinitialisation a été envoyé à ${email} (simulation).\nVérifiez votre boîte professionnelle.`);
+            document.getElementById('forgotForm').reset();
+            showLogin();
+        });
+        
+        // Helper functions pour erreurs
+        function showFieldError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            if (errorEl) {
+                errorEl.innerText = message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+        function hideFieldError(elementId) {
+            const errorEl = document.getElementById(elementId);
+            if (errorEl) errorEl.classList.add('hidden');
+        }
+        
+        // Option: si l'utilisateur a coché "Se souvenir de moi" précédemment, pré-remplir email (mais jamais mot de passe)
+        if (localStorage.getItem('mediflow_remember') === 'true') {
+            const savedEmail = localStorage.getItem('mediflow_user');
+            if (savedEmail) {
+                try {
+                    const decoded = atob(savedEmail);
+                    document.getElementById('loginEmail').value = decoded;
+                    document.getElementById('rememberMe').checked = true;
+                } catch(e) {}
+            }
+        }
+        
+        // Ajouter validation en temps réel optionnelle pour l'expérience
+        const registerPassword = document.getElementById('registerPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+        function checkPasswordMatch() {
+            if (registerPassword.value && confirmPassword.value && registerPassword.value !== confirmPassword.value) {
+                showFieldError('confirmError', 'Les mots de passe ne correspondent pas');
+            } else if (confirmPassword.value && registerPassword.value === confirmPassword.value) {
+                hideFieldError('confirmError');
+            }
+        }
+        registerPassword?.addEventListener('input', checkPasswordMatch);
+        confirmPassword?.addEventListener('input', checkPasswordMatch);
+        
+        // Validation simple email sur login pour feedback utilisateur
+        document.getElementById('loginEmail').addEventListener('input', function() {
+            if (this.value.trim() !== '') hideFieldError('loginEmailError');
+        });
+        document.getElementById('loginPassword').addEventListener('input', function() {
+            if (this.value !== '') hideFieldError('loginPasswordError');
+        });
+        
+        // animation de focus pour champ
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() { this.classList.add('border-primary/30'); });
+            input.addEventListener('blur', function() { this.classList.remove('border-primary/30'); });
+        });
+    </script>
+</body>
+</html>

@@ -6,7 +6,7 @@
         private static $instance = null;
         private static $config = [
             'host' => 'localhost',
-            'dbname' => 'cnss_db',
+            'dbname' => 'snel_db',
             'username' => 'root',
             'password' => ''
         ];
